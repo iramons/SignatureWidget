@@ -1,0 +1,172 @@
+//
+//  WidgetExtension.swift
+//  WidgetExtension
+//
+//  Created by Ramon Santos on 16/11/25.
+//
+
+import WidgetKit
+import SwiftUI
+
+// MARK: - Tipos simples só para o Widget (evitam depender de SwiftData no Extension)
+struct WidgetStrokePoint: Hashable {
+    var x: CGFloat
+    var y: CGFloat
+}
+
+struct WidgetStroke: Hashable, Identifiable {
+    var id: UUID = UUID()
+    var points: [WidgetStrokePoint]
+    var color: Color = .primary
+    var lineWidth: CGFloat = 4.0
+}
+
+// MARK: - Views equivalentes ao SignatureThumbnail/SignatureCanvasReadonly
+struct SignatureCanvasReadonlyWidget: View {
+    let strokes: [WidgetStroke]
+
+    var body: some View {
+        Canvas { context, size in
+            for stroke in strokes {
+                guard !stroke.points.isEmpty else { continue }
+                var path = Path()
+                let pts = stroke.points.map { CGPoint(x: $0.x * size.width, y: $0.y * size.height) }
+                if let first = pts.first {
+                    path.move(to: first)
+                    for p in pts.dropFirst() {
+                        path.addLine(to: p)
+                    }
+                }
+                context.stroke(path, with: .color(stroke.color), lineWidth: stroke.lineWidth)
+            }
+        }
+        .aspectRatio(3, contentMode: .fit)
+    }
+}
+
+struct SignatureThumbnailWidget: View {
+    let strokes: [WidgetStroke]
+    var body: some View {
+        SignatureCanvasReadonlyWidget(strokes: strokes)
+            .contentShape(Rectangle())
+    }
+}
+
+// MARK: - Converter DTO -> Strokes do widget
+func widgetStrokes(from shared: WidgetSharedSignatureData) -> [WidgetStroke] {
+    shared.strokes.map { s in
+        WidgetStroke(
+            id: s.id,
+            points: s.points.map { WidgetStrokePoint(x: $0.x, y: $0.y) },
+            color: Color.fromHexRGBA(s.colorHex) ?? .primary,
+            lineWidth: s.lineWidth
+        )
+    }
+}
+
+// MARK: - Timeline Provider
+struct Provider: AppIntentTimelineProvider {
+    func placeholder(in context: Context) -> SimpleEntry {
+        SimpleEntry(date: Date(),
+                    strokes: [],
+                    configuration: ConfigurationAppIntent())
+    }
+
+    func snapshot(for configuration: ConfigurationAppIntent, in context: Context) async -> SimpleEntry {
+        let strokes = await loadStrokes(for: configuration)
+        return SimpleEntry(date: Date(),
+                           strokes: strokes,
+                           configuration: configuration)
+    }
+    
+    func timeline(for configuration: ConfigurationAppIntent, in context: Context) async -> Timeline<SimpleEntry> {
+        let currentDate = Date()
+        let strokes = await loadStrokes(for: configuration)
+
+        let entry = SimpleEntry(date: currentDate,
+                                strokes: strokes,
+                                configuration: configuration)
+
+        return Timeline(entries: [entry], policy: .atEnd)
+    }
+
+    private func loadStrokes(for configuration: ConfigurationAppIntent) async -> [WidgetStroke] {
+        do {
+            if let chosen = configuration.signature {
+                let shared = try await WidgetCatalogLoader.loadSignature(uuid: chosen.id)
+                return widgetStrokes(from: shared)
+            } else {
+                let catalog = try await WidgetCatalogLoader.loadCatalog()
+                if let latest = catalog.sorted(by: { $0.createdAt > $1.createdAt }).first {
+                    let shared = try await WidgetCatalogLoader.loadSignature(uuid: latest.uuid)
+                    return widgetStrokes(from: shared)
+                }
+            }
+        } catch {
+            print("Provider.loadStrokes error:", error)
+        }
+        return []
+    }
+}
+
+// MARK: - Entry
+struct SimpleEntry: TimelineEntry {
+    let date: Date
+    let strokes: [WidgetStroke]
+    let configuration: ConfigurationAppIntent
+}
+
+// MARK: - Entry View (adapta para Lock Screen e Home)
+struct WidgetExtensionEntryView: View {
+    @Environment(\.widgetFamily) private var family
+    var entry: Provider.Entry
+
+    var body: some View {
+        switch family {
+        case .accessoryInline:
+            Text("Assinatura")
+        case .accessoryCircular:
+            ZStack {
+                SignatureThumbnailWidget(strokes: entry.strokes)
+                    .padding(2)
+            }
+        case .accessoryRectangular:
+            SignatureThumbnailWidget(strokes: entry.strokes)
+                .padding(4)
+        default:
+            SignatureThumbnailWidget(strokes: entry.strokes)
+                .padding(8)
+        }
+    }
+}
+
+// MARK: - Widget
+struct WidgetExtension: Widget {
+    let kind: String = "WidgetExtension"
+
+    var body: some WidgetConfiguration {
+        AppIntentConfiguration(kind: kind,
+                               intent: ConfigurationAppIntent.self,
+                               provider: Provider()) { entry in
+            WidgetExtensionEntryView(entry: entry)
+                .containerBackground(.fill.tertiary, for: .widget)
+        }
+        .configurationDisplayName("Assinatura")
+        .description("Mostra sua assinatura salva.")
+        .supportedFamilies([
+            .systemSmall,            // Home Screen
+            .systemMedium,           // Home Screen (opcional)
+            .systemLarge,            // Home Screen (opcional)
+            .accessoryRectangular,   // Lock Screen
+            .accessoryCircular,      // Lock Screen
+            .accessoryInline         // Lock Screen (texto curto)
+        ])
+    }
+}
+
+// MARK: - Previews
+#Preview(as: .systemSmall) {
+    WidgetExtension()
+} timeline: {
+    SimpleEntry(date: .now, strokes: [], configuration: ConfigurationAppIntent())
+}
