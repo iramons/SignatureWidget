@@ -65,6 +65,15 @@
           "adHocOffers" : [
 
           ],
+          "billingPlans" : [
+            {
+              "billingPlanType" : "BILLED_UPFRONT",
+              "commitmentDisplayPrice" : "1.99",
+              "displayPrice" : "1.99",
+              "internalID" : "C841F72F",
+              "isEnabled" : true
+            }
+          ],
           "codeOffers" : [
 
           ],
@@ -72,7 +81,9 @@
           "familyShareable" : false,
           "groupNumber" : 1,
           "internalID" : "C3D4E5F6-A7B8-9012-CDEF-123456789012",
-          "introductoryOffer" : null,
+          "introductoryOffers" : [
+
+          ],
           "localizations" : [
             {
               "description" : "Assinatura mensal do SignatureWidget Premium.",
@@ -98,6 +109,22 @@
           "adHocOffers" : [
 
           ],
+          "billingPlans" : [
+            {
+              "billingPlanType" : "BILLED_UPFRONT",
+              "commitmentDisplayPrice" : "9.99",
+              "displayPrice" : "9.99",
+              "internalID" : "0BD4D194",
+              "isEnabled" : true
+            },
+            {
+              "billingPlanType" : "MONTHLY",
+              "commitmentDisplayPrice" : "9,96",
+              "displayPrice" : "0.83",
+              "internalID" : "7B2BA7DC",
+              "isEnabled" : true
+            }
+          ],
           "codeOffers" : [
 
           ],
@@ -105,7 +132,9 @@
           "familyShareable" : false,
           "groupNumber" : 2,
           "internalID" : "D4E5F6A7-B8C9-0123-DEFA-234567890123",
-          "introductoryOffer" : null,
+          "introductoryOffers" : [
+
+          ],
           "localizations" : [
             {
               "description" : "Assinatura anual do SignatureWidget Premium.",
@@ -131,7 +160,7 @@
     }
   ],
   "version" : {
-    "major" : 4,
+    "major" : 5,
     "minor" : 0
   }
 }
