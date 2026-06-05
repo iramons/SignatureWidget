@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SignatureWidget — Your Signature, Always on Screen</title>
+  <meta name="description" content="Draw your handwritten signature and display it as a home screen or lock screen widget on iPhone and iPad." />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0a0a0a;
+      color: #f0f0f0;
+      min-height: 100vh;
+    }
+
+    header {
+      text-align: center;
+      padding: 80px 24px 60px;
+    }
+
+    .app-icon {
+      width: 96px;
+      height: 96px;
+      border-radius: 22px;
+      background: linear-gradient(145deg, #1c1c1e, #2c2c2e);
+      border: 1px solid #3a3a3c;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 24px;
+      font-size: 48px;
+    }
+
+    h1 {
+      font-size: 42px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-bottom: 16px;
+    }
+
+    .tagline {
+      font-size: 20px;
+      color: #a0a0a8;
+      max-width: 480px;
+      margin: 0 auto 36px;
+      line-height: 1.5;
+    }
+
+    .badge {
+      display: inline-block;
+    }
+
+    .badge img {
+      height: 52px;
+    }
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 20px;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 24px 80px;
+    }
+
+    .feature {
+      background: #1c1c1e;
+      border: 1px solid #2c2c2e;
+      border-radius: 16px;
+      padding: 28px 24px;
+    }
+
+    .feature-icon {
+      font-size: 28px;
+      margin-bottom: 12px;
+    }
+
+    .feature h3 {
+      font-size: 17px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .feature p {
+      font-size: 15px;
+      color: #a0a0a8;
+      line-height: 1.5;
+    }
+
+    footer {
+      text-align: center;
+      padding: 32px 24px;
+      border-top: 1px solid #1c1c1e;
+      color: #60606a;
+      font-size: 14px;
+    }
+
+    footer a {
+      color: #a0a0a8;
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      color: #f0f0f0;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="app-icon">✍️</div>
+    <h1>SignatureWidget</h1>
+    <p class="tagline">Draw your handwritten signature once. Display it on your home screen and lock screen — always.</p>
+    <a class="badge" href="https://apps.apple.com/app/signaturewidget" target="_blank">
+      <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="Download on the App Store" />
+    </a>
+  </header>
+
+  <section class="features">
+    <div class="feature">
+      <div class="feature-icon">🖊️</div>
+      <h3>Natural Drawing Canvas</h3>
+      <p>Draw your signature with your finger on a smooth, responsive canvas. Undo strokes and refine until it's perfect.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">🎨</div>
+      <h3>Custom Colors</h3>
+      <p>Choose any ink color to match your personal style or home screen aesthetic.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">📱</div>
+      <h3>Home & Lock Screen Widgets</h3>
+      <p>Display your signature as a small, medium, or large home screen widget — or as a lock screen accessory.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">✨</div>
+      <h3>Sharp on Every Display</h3>
+      <p>Resolution-independent rendering ensures your signature looks crisp on every iPhone and iPad screen.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">💾</div>
+      <h3>Multiple Signatures</h3>
+      <p>Save as many signatures as you like and choose which one to display on each widget.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">⚡</div>
+      <h3>Always Up to Date</h3>
+      <p>Edit or replace your signature and widgets update instantly — no extra steps needed.</p>
+    </div>
+  </section>
+
+  <footer>
+    <p>
+      &copy; 2026 Ramon &nbsp;·&nbsp;
+      <a href="https://github.com/iramons/SignatureWidget/issues" target="_blank">Support</a>
+      &nbsp;·&nbsp;
+      <a href="https://github.com/iramons/SignatureWidget" target="_blank">GitHub</a>
+    </p>
+  </footer>
+
+</body>
+</html>
