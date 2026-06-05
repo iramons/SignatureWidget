@@ -37,12 +37,33 @@ struct SharedSignatureCatalogItem: Codable, Identifiable, Hashable {
     var id: UUID { uuid }
     let uuid: UUID
     let createdAt: Date
+    let name: String
+
+    init(uuid: UUID, createdAt: Date, name: String) {
+        self.uuid = uuid; self.createdAt = createdAt; self.name = name
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        uuid      = try c.decode(UUID.self,   forKey: .uuid)
+        createdAt = try c.decode(Date.self,   forKey: .createdAt)
+        name      = try c.decodeIfPresent(String.self, forKey: .name) ?? ""
+    }
 }
 
 struct SharedSignatureData: Codable {
     let uuid: UUID
     let createdAt: Date
+    let name: String
     let strokes: [SharedStroke]
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        uuid      = try c.decode(UUID.self,          forKey: .uuid)
+        createdAt = try c.decode(Date.self,          forKey: .createdAt)
+        name      = try c.decodeIfPresent(String.self, forKey: .name) ?? ""
+        strokes   = try c.decode([SharedStroke].self, forKey: .strokes)
+    }
 }
 
 struct SharedStroke: Codable, Hashable, Identifiable {
@@ -61,7 +82,7 @@ struct SharedStrokePoint: Codable, Hashable {
 
 extension SharedSignatureCatalogItem {
     init(from signature: Signature) {
-        self.init(uuid: signature.uuid, createdAt: signature.createdAt)
+        self.init(uuid: signature.uuid, createdAt: signature.createdAt, name: signature.name ?? "")
     }
 }
 
@@ -69,6 +90,7 @@ extension SharedSignatureData {
     init(from signature: Signature) {
         self.uuid = signature.uuid
         self.createdAt = signature.createdAt
+        self.name = signature.name ?? ""
         self.strokes = signature.strokes.map { SharedStroke(from: $0) }
     }
 }

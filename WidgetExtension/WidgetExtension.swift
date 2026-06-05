@@ -86,17 +86,36 @@ struct Provider: AppIntentTimelineProvider {
         return Timeline(entries: [entry], policy: .after(nextUpdate))
     }
 
+    private static let selectedUUIDKey = "selectedSignatureUUID"
+    private var defaults: UserDefaults? {
+        UserDefaults(suiteName: WidgetCatalogLoader.appGroupID)
+    }
+
     private func loadStrokes(for configuration: ConfigurationAppIntent) async -> [WidgetStroke] {
         do {
+            // Resolve UUID: prefer explicit selection, then last known selection, then latest
+            let resolvedUUID: UUID?
             if let chosen = configuration.signature {
-                let shared = try await WidgetCatalogLoader.loadSignature(uuid: chosen.id)
-                return widgetStrokes(from: shared)
+                // Persist so future reloads survive entity re-resolution failures
+                defaults?.set(chosen.id.uuidString, forKey: Self.selectedUUIDKey)
+                resolvedUUID = chosen.id
+            } else if let stored = defaults?.string(forKey: Self.selectedUUIDKey),
+                      let uuid = UUID(uuidString: stored) {
+                resolvedUUID = uuid
             } else {
-                let catalog = try await WidgetCatalogLoader.loadCatalog()
-                if let latest = catalog.sorted(by: { $0.createdAt > $1.createdAt }).first {
-                    let shared = try await WidgetCatalogLoader.loadSignature(uuid: latest.uuid)
-                    return widgetStrokes(from: shared)
-                }
+                resolvedUUID = nil
+            }
+
+            if let uuid = resolvedUUID,
+               let shared = try? await WidgetCatalogLoader.loadSignature(uuid: uuid) {
+                return widgetStrokes(from: shared)
+            }
+
+            // Final fallback: most recently created signature
+            let catalog = try await WidgetCatalogLoader.loadCatalog()
+            if let latest = catalog.sorted(by: { $0.createdAt > $1.createdAt }).first {
+                let shared = try await WidgetCatalogLoader.loadSignature(uuid: latest.uuid)
+                return widgetStrokes(from: shared)
             }
         } catch {
             print("Provider.loadStrokes error:", error)

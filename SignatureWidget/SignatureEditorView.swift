@@ -12,6 +12,7 @@ struct SignatureEditorView: View {
     @State private var workingStrokes: [Stroke] = []
     @State private var color: Color
     @State private var lineWidth: CGFloat
+    @State private var name: String
 
     let signature: Signature
     let onFinish: (Result) -> Void
@@ -24,15 +25,27 @@ struct SignatureEditorView: View {
         _color          = State(initialValue: Color.fromHexRGBA(signature.strokeColorHex) ?? .primary)
         _lineWidth      = State(initialValue: signature.strokeWidth)
         _workingStrokes = State(initialValue: signature.strokes)
+        _name           = State(initialValue: signature.name ?? "")
     }
 
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
+                // ── Name field ──
+                TextField("Name", text: $name)
+                    .font(.system(size: 16, weight: .medium, design: .rounded))
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 11)
+                    .background(Color(.systemBackground))
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .shadow(color: .black.opacity(0.05), radius: 6, x: 0, y: 2)
+                    .padding(.horizontal, 16)
+                    .padding(.top, 16)
+
                 // ── Drawing canvas ──
                 canvasArea
                     .padding(.horizontal, 16)
-                    .padding(.top, 16)
+                    .padding(.top, 12)
 
                 // ── Controls strip ──
                 controlsStrip
@@ -167,6 +180,7 @@ struct SignatureEditorView: View {
     private var saveButton: some View {
         let isEmpty = workingStrokes.isEmpty && currentStroke.points.isEmpty
         return Button {
+            signature.name           = name.isEmpty ? nil : name
             signature.strokeColorHex = color.toHexRGBA()
             signature.strokeWidth    = lineWidth
             signature.strokes        = workingStrokes

@@ -13,19 +13,20 @@ import SwiftUI
 final class Signature {
     @Attribute(.unique) var uuid: UUID
     var createdAt: Date
-    // Propriedades de estilo padrão para novos traços
+    var name: String?
     var strokeColorHex: String
     var strokeWidth: CGFloat
-    // Armazena os traços desenhados
     var strokes: [Stroke]
 
     init(uuid: UUID = UUID(),
          createdAt: Date = Date(),
+         name: String? = nil,
          strokeColor: Color = .primary,
          strokeWidth: CGFloat = 4.0,
          strokes: [Stroke] = []) {
         self.uuid = uuid
         self.createdAt = createdAt
+        self.name = name
         self.strokeColorHex = strokeColor.toHexRGBA()
         self.strokeWidth = strokeWidth
         self.strokes = strokes

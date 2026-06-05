@@ -19,10 +19,16 @@ struct SignatureChoice: AppEntity, Identifiable {
 
     let id: UUID
     let createdAt: Date
+    let name: String
 
     var displayRepresentation: DisplayRepresentation {
-        let dateStr = DateFormatter.localizedString(from: createdAt, dateStyle: .short, timeStyle: .short)
-        return DisplayRepresentation(title: "\(dateStr)")
+        if name.isEmpty {
+            let dateStr = DateFormatter.localizedString(from: createdAt, dateStyle: .medium, timeStyle: .medium)
+            return DisplayRepresentation(title: "\(dateStr)")
+        } else {
+            let dateStr = DateFormatter.localizedString(from: createdAt, dateStyle: .short, timeStyle: .short)
+            return DisplayRepresentation(title: "\(name)", subtitle: "\(dateStr)")
+        }
     }
 }
 
@@ -32,15 +38,14 @@ struct SignatureChoiceQuery: EntityQuery {
         let map = Dictionary(uniqueKeysWithValues: catalog.map { ($0.uuid, $0) })
         return identifiers.compactMap { id in
             guard let item = map[id] else { return nil }
-            return SignatureChoice(id: item.uuid, createdAt: item.createdAt)
+            return SignatureChoice(id: item.uuid, createdAt: item.createdAt, name: item.name)
         }
     }
 
     func suggestedEntities() async throws -> [SignatureChoice] {
         let catalog = try await WidgetCatalogLoader.loadCatalog()
-        // Ordena por data decrescente
         let sorted = catalog.sorted { $0.createdAt > $1.createdAt }
-        return sorted.map { SignatureChoice(id: $0.uuid, createdAt: $0.createdAt) }
+        return sorted.map { SignatureChoice(id: $0.uuid, createdAt: $0.createdAt, name: $0.name) }
     }
 
     func allEntities() async throws -> [SignatureChoice] {
@@ -52,12 +57,29 @@ struct SignatureChoiceQuery: EntityQuery {
 struct WidgetSharedSignatureCatalogItem: Codable {
     let uuid: UUID
     let createdAt: Date
+    let name: String
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        uuid      = try c.decode(UUID.self,  forKey: .uuid)
+        createdAt = try c.decode(Date.self,  forKey: .createdAt)
+        name      = try c.decodeIfPresent(String.self, forKey: .name) ?? ""
+    }
 }
 
 struct WidgetSharedSignatureData: Codable {
     let uuid: UUID
     let createdAt: Date
+    let name: String
     let strokes: [WidgetSharedStroke]
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        uuid      = try c.decode(UUID.self,               forKey: .uuid)
+        createdAt = try c.decode(Date.self,               forKey: .createdAt)
+        name      = try c.decodeIfPresent(String.self,    forKey: .name) ?? ""
+        strokes   = try c.decode([WidgetSharedStroke].self, forKey: .strokes)
+    }
 }
 
 struct WidgetSharedStroke: Codable, Hashable, Identifiable {

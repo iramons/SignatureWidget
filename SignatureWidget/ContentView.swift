@@ -251,7 +251,7 @@ private struct SignatureRowView: View {
                 )
 
             VStack(alignment: .leading, spacing: 4) {
-                Text("Signature")
+                Text(signature.name?.isEmpty == false ? signature.name! : String(localized: "Signature"))
                     .font(.system(size: 15, weight: .semibold, design: .rounded))
                 Text(signature.createdAt, format: Date.FormatStyle(date: .numeric, time: .shortened))
                     .font(.caption)
@@ -315,7 +315,7 @@ struct SignatureDetailView: View {
             .padding(.top, 28)
         }
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
-        .navigationTitle("Signature")
+        .navigationTitle(signature.name?.isEmpty == false ? signature.name! : String(localized: "Signature"))
 #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
 #endif

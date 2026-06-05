@@ -14,7 +14,27 @@ struct SignatureWidgetApp: App {
         do {
             return try ModelContainer(for: schema, configurations: [config])
         } catch {
-            fatalError("Could not create ModelContainer: \(error)")
+            // Migration failed — delete the store and start fresh rather than
+            // crashing. Checks both the app container and the App Group container.
+            let candidates: [URL] = [
+                FileManager.default
+                    .containerURL(forSecurityApplicationGroupIdentifier: "group.br.com.devbrains.SignatureWidgets")?
+                    .appendingPathComponent("Library/Application Support/default.store"),
+                FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first?
+                    .appendingPathComponent("default.store")
+            ].compactMap { $0 }
+
+            for base in candidates {
+                for suffix in ["", "-shm", "-wal"] {
+                    try? FileManager.default.removeItem(at: URL(fileURLWithPath: base.path + suffix))
+                }
+            }
+
+            do {
+                return try ModelContainer(for: schema, configurations: [config])
+            } catch {
+                fatalError("Could not create ModelContainer even after reset: \(error)")
+            }
         }
     }()
 
