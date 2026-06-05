@@ -10,6 +10,8 @@
 		207A5C0D2ECA3BE100B3145F /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 207A5C0C2ECA3BE100B3145F /* WidgetKit.framework */; };
 		207A5C0F2ECA3BE100B3145F /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 207A5C0E2ECA3BE100B3145F /* SwiftUI.framework */; };
 		207A5C1C2ECA3BE300B3145F /* WidgetExtensionExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 207A5C0A2ECA3BE100B3145F /* WidgetExtensionExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		528E229A2FD34C2600AB3108 /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 528E22992FD34C2600AB3108 /* StoreKit.framework */; };
+		528E23362FD34E4200AB3108 /* SignatureWidget.storekit in Resources */ = {isa = PBXBuildFile; fileRef = 528E23352FD34E4200AB3108 /* SignatureWidget.storekit */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -58,6 +60,8 @@
 		207A5C0A2ECA3BE100B3145F /* WidgetExtensionExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = WidgetExtensionExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		207A5C0C2ECA3BE100B3145F /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		207A5C0E2ECA3BE100B3145F /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		528E22992FD34C2600AB3108 /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
+		528E23352FD34E4200AB3108 /* SignatureWidget.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; path = SignatureWidget.storekit; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -102,6 +106,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				528E229A2FD34C2600AB3108 /* StoreKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -134,6 +139,7 @@
 		207A5BCD2ECA342F00B3145F = {
 			isa = PBXGroup;
 			children = (
+				528E23352FD34E4200AB3108 /* SignatureWidget.storekit */,
 				203CF05A2ECA403A0058498A /* WidgetExtensionExtension.entitlements */,
 				207A5BD82ECA342F00B3145F /* SignatureWidget */,
 				207A5C102ECA3BE100B3145F /* WidgetExtension */,
@@ -156,6 +162,7 @@
 		207A5C0B2ECA3BE100B3145F /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				528E22992FD34C2600AB3108 /* StoreKit.framework */,
 				207A5C0C2ECA3BE100B3145F /* WidgetKit.framework */,
 				207A5C0E2ECA3BE100B3145F /* SwiftUI.framework */,
 			);
@@ -304,6 +311,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				528E23362FD34E4200AB3108 /* SignatureWidget.storekit in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

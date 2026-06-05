@@ -181,6 +181,7 @@
       }
     },
     "Could not load plans." : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
