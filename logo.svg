@@ -1,0 +1,53 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Main brand gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#6366F1"/>
+      <stop offset="100%" stop-color="#8B5CF6"/>
+    </linearGradient>
+    <!-- Subtle inner highlight -->
+    <linearGradient id="shineGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%"   stop-color="#ffffff" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.00"/>
+    </linearGradient>
+    <filter id="softShadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="12" stdDeviation="24" flood-color="#3730A3" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+
+  <!-- App icon background -->
+  <rect width="1024" height="1024" rx="224" ry="224" fill="url(#bgGrad)" filter="url(#softShadow)"/>
+  <!-- Top highlight shine -->
+  <rect width="1024" height="512" rx="224" ry="224" fill="url(#shineGrad)"/>
+
+  <!-- ── Signature mark ── -->
+  <!-- Main flowing stroke: a cursive loop with tail -->
+  <path d="
+    M 168 580
+    C 180 480, 230 400, 290 390
+    C 350 380, 390 420, 395 470
+    C 400 520, 370 560, 335 550
+    C 300 540, 295 505, 325 488
+    C 355 470, 410 480, 450 530
+    C 490 580, 510 620, 560 605
+    C 610 590, 650 545, 700 555
+    C 750 565, 790 610, 840 595
+    L 870 582
+  "
+    fill="none"
+    stroke="white"
+    stroke-width="52"
+    stroke-linecap="round"
+    stroke-linejoin="round"/>
+
+  <!-- Pen-dot at start -->
+  <circle cx="168" cy="580" r="30" fill="white"/>
+
+  <!-- Underline flourish -->
+  <path d="M 148 700 C 340 678, 620 695, 876 672"
+    fill="none"
+    stroke="white"
+    stroke-width="30"
+    stroke-linecap="round"
+    opacity="0.55"/>
+</svg>

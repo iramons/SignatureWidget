@@ -2,8 +2,6 @@
 //  ContentView.swift
 //  SignatureWidget
 //
-//  Created by Ramon Santos on 16/11/25.
-//
 
 import SwiftUI
 import SwiftData
@@ -12,89 +10,161 @@ import WidgetKit
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Signature.createdAt, order: .reverse) private var signatures: [Signature]
-    @State private var showingEditor = false
+    @State private var showingEditor     = false
     @State private var selectedSignature: Signature?
 
     var body: some View {
         NavigationSplitView {
-            List {
-                ForEach(signatures) { sig in
-                    NavigationLink {
-                        SignatureDetailView(signature: sig,
-                                            onEdit: { startEditing(signature: sig) })
-                    } label: {
-                        HStack {
-                            SignatureThumbnail(signature: sig)
-                                .frame(width: 56, height: 56)
-                                .background(Color(.secondarySystemBackground))
-                                .clipShape(RoundedRectangle(cornerRadius: 8))
-                            VStack(alignment: .leading) {
-                                Text("Assinatura")
-                                    .font(.headline)
-                                Text(sig.createdAt, format: Date.FormatStyle(date: .numeric, time: .standard))
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                            }
-                        }
-                    }
+            Group {
+                if signatures.isEmpty {
+                    emptyState
+                } else {
+                    signatureList
                 }
-                .onDelete(perform: deleteSignatures)
             }
+            .navigationTitle("Assinaturas")
 #if os(macOS)
-            .navigationSplitViewColumnWidth(min: 220, ideal: 260)
+            .navigationSplitViewColumnWidth(min: 240, ideal: 280)
 #endif
-            .toolbar {
-#if os(iOS)
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    EditButton()
-                }
-#endif
-                ToolbarItem {
-                    Button {
-                        // Nova assinatura
-                        selectedSignature = Signature()
-                        showingEditor = true
-                    } label: {
-                        Label("Nova Assinatura", systemImage: "plus")
-                    }
-                }
-            }
-            .sheet(isPresented: $showingEditor) {
-                if let sig = selectedSignature {
-                    SignatureEditorView(signature: sig) { result in
-                        switch result {
-                        case .saved:
-                            if !isExistingSignature(sig) {
-                                // Inserção de novo item
-                                withAnimation {
-                                    modelContext.insert(sig)
-                                }
-                                // Export individual (já feito no editor) e reconstrói catálogo
-                                SignatureSharingWriter.rebuildCatalog(from: signaturesAfterInsert(sig))
-                            } else {
-                                // Edição de item existente: só reexporta e reconstrói catálogo
-                                SignatureSharingWriter.writeSignature(sig)
-                                SignatureSharingWriter.rebuildCatalog(from: signatures)
-                            }
-                            SignatureSharingWriter.reloadWidgets()
-                        case .cancelled:
-                            break
-                        }
-                        showingEditor = false
-                    }
-                }
-            }
+            .toolbar { toolbarContent }
+            .sheet(isPresented: $showingEditor) { editorSheet }
         } detail: {
-            Text("Selecione ou crie uma assinatura")
-                .foregroundStyle(.secondary)
+            detailPlaceholder
         }
         .onAppear {
-            // Garante que o catálogo exista ao abrir o app
             SignatureSharingWriter.rebuildCatalog(from: signatures)
         }
     }
 
-    // MARK: - Helpers de edição
+    // MARK: - List
+
+    private var signatureList: some View {
+        List {
+            ForEach(signatures) { sig in
+                NavigationLink {
+                    SignatureDetailView(signature: sig,
+                                       onEdit: { startEditing(signature: sig) })
+                } label: {
+                    SignatureRowView(signature: sig)
+                }
+                .listRowBackground(Color.clear)
+                .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
+                .listRowSeparator(.hidden)
+            }
+            .onDelete(perform: deleteSignatures)
+        }
+        .listStyle(.plain)
+        .background(Color(.systemGroupedBackground))
+    }
+
+    // MARK: - Empty State
+
+    private var emptyState: some View {
+        VStack(spacing: 28) {
+            Spacer()
+
+            ZStack {
+                Circle()
+                    .fill(LinearGradient.brandSubtle)
+                    .frame(width: 136, height: 136)
+                AppLogoMarkView()
+                    .frame(width: 80, height: 80)
+            }
+
+            VStack(spacing: 8) {
+                Text("Nenhuma assinatura")
+                    .font(.system(size: 22, weight: .bold, design: .rounded))
+                Text("Crie sua primeira assinatura\ne adicione ao widget.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+
+            Button {
+                selectedSignature = Signature()
+                showingEditor = true
+            } label: {
+                Label("Nova Assinatura", systemImage: "plus")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 32)
+                    .padding(.vertical, 14)
+                    .background(LinearGradient.brand)
+                    .clipShape(Capsule())
+                    .brandShadow()
+            }
+
+            Spacer()
+            Spacer()
+        }
+        .frame(maxWidth: .infinity)
+        .background(Color(.systemGroupedBackground).ignoresSafeArea())
+    }
+
+    // MARK: - Toolbar
+
+    @ToolbarContentBuilder
+    private var toolbarContent: some ToolbarContent {
+#if os(iOS)
+        ToolbarItem(placement: .navigationBarLeading) {
+            EditButton().tint(.brandIndigo)
+        }
+#endif
+        ToolbarItem(placement: .primaryAction) {
+            Button {
+                selectedSignature = Signature()
+                showingEditor = true
+            } label: {
+                ZStack {
+                    Circle()
+                        .fill(LinearGradient.brand)
+                        .frame(width: 32, height: 32)
+                    Image(systemName: "plus")
+                        .font(.system(size: 15, weight: .bold))
+                        .foregroundStyle(.white)
+                }
+            }
+        }
+    }
+
+    // MARK: - Editor Sheet
+
+    @ViewBuilder
+    private var editorSheet: some View {
+        if let sig = selectedSignature {
+            SignatureEditorView(signature: sig) { result in
+                switch result {
+                case .saved:
+                    if !isExistingSignature(sig) {
+                        withAnimation { modelContext.insert(sig) }
+                        SignatureSharingWriter.rebuildCatalog(from: signaturesAfterInsert(sig))
+                    } else {
+                        SignatureSharingWriter.writeSignature(sig)
+                        SignatureSharingWriter.rebuildCatalog(from: signatures)
+                    }
+                    SignatureSharingWriter.reloadWidgets()
+                case .cancelled:
+                    break
+                }
+                showingEditor = false
+            }
+        }
+    }
+
+    // MARK: - Detail Placeholder
+
+    private var detailPlaceholder: some View {
+        VStack(spacing: 14) {
+            AppLogoMarkView()
+                .frame(width: 72, height: 72)
+                .opacity(0.35)
+            Text("Selecione ou crie uma assinatura")
+                .font(.system(.subheadline, design: .rounded))
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    // MARK: - Helpers
 
     private func startEditing(signature: Signature) {
         selectedSignature = signature
@@ -121,7 +191,6 @@ struct ContentView: View {
                 removedUUIDs.append(sig.uuid)
                 modelContext.delete(sig)
             }
-            // Remove arquivos individuais e reconstrói catálogo
             removedUUIDs.forEach { SignatureSharingWriter.removeSignatureFile(uuid: $0) }
             SignatureSharingWriter.rebuildCatalog(from: signatures)
             SignatureSharingWriter.reloadWidgets()
@@ -129,60 +198,110 @@ struct ContentView: View {
     }
 }
 
-// MARK: - Small helpers
+// MARK: - Signature Row
 
-private struct SignatureDetailView: View {
+private struct SignatureRowView: View {
+    let signature: Signature
+
+    var body: some View {
+        HStack(spacing: 14) {
+            SignatureCanvasReadonly(signature: signature)
+                .frame(width: 80, height: 52)
+                .background(Color(.secondarySystemBackground))
+                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .strokeBorder(Color.brandIndigo.opacity(0.14), lineWidth: 1)
+                )
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Assinatura")
+                    .font(.system(size: 15, weight: .semibold, design: .rounded))
+                Text(signature.createdAt, format: Date.FormatStyle(date: .numeric, time: .shortened))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Spacer()
+        }
+        .padding(12)
+        .cardSurface(cornerRadius: 14)
+    }
+}
+
+// MARK: - Signature Detail
+
+struct SignatureDetailView: View {
     let signature: Signature
     var onEdit: () -> Void
 
     var body: some View {
-        VStack(spacing: 12) {
-            SignatureCanvasReadonly(signature: signature)
-                .padding()
-                .background(Color(.systemBackground))
-                .clipShape(RoundedRectangle(cornerRadius: 16))
-                .padding()
-            Text(signature.createdAt, style: .date)
-                .foregroundStyle(.secondary)
-            HStack {
-                Spacer()
-                Button {
-                    onEdit()
-                } label: {
-                    Label("Editar", systemImage: "pencil")
+        ScrollView {
+            VStack(spacing: 28) {
+                // Preview
+                SignatureCanvasReadonly(signature: signature)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 200)
+                    .background(Color(.systemBackground))
+                    .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 20, style: .continuous)
+                            .strokeBorder(Color.brandIndigo.opacity(0.12), lineWidth: 1.5)
+                    )
+                    .shadow(color: .black.opacity(0.06), radius: 14, x: 0, y: 6)
+                    .padding(.horizontal)
+
+                // Date info
+                HStack {
+                    Label(
+                        signature.createdAt.formatted(date: .long, time: .shortened),
+                        systemImage: "calendar"
+                    )
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    Spacer()
                 }
-                .buttonStyle(.borderedProminent)
+                .padding(.horizontal)
+
+                // Edit button
+                Button(action: onEdit) {
+                    Label("Editar Assinatura", systemImage: "pencil")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 15)
+                        .background(LinearGradient.brand)
+                        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        .brandShadow()
+                }
+                .padding(.horizontal)
             }
-            .padding(.horizontal)
+            .padding(.top, 28)
         }
+        .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .navigationTitle("Assinatura")
+#if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+#endif
     }
 }
 
-private struct SignatureThumbnail: View {
-    let signature: Signature
-    var body: some View {
-        SignatureCanvasReadonly(signature: signature)
-            .contentShape(Rectangle())
-    }
-}
+// MARK: - Read-only Canvas (shared between list & detail)
 
-private struct SignatureCanvasReadonly: View {
+struct SignatureCanvasReadonly: View {
     let signature: Signature
+
     var body: some View {
         Canvas { context, size in
             for stroke in signature.strokes {
                 var path = Path()
-                let pts = stroke.points.map { CGPoint(x: $0.x * size.width, y: $0.y * size.height) }
-                if let first = pts.first {
-                    path.move(to: first)
-                    for p in pts.dropFirst() {
-                        path.addLine(to: p)
-                    }
+                let pts = stroke.points.map {
+                    CGPoint(x: $0.x * size.width, y: $0.y * size.height)
                 }
-                context.stroke(path,
-                               with: .color(stroke.color),
-                               lineWidth: stroke.lineWidth)
+                guard let first = pts.first else { continue }
+                path.move(to: first)
+                for p in pts.dropFirst() { path.addLine(to: p) }
+                context.stroke(path, with: .color(stroke.color), lineWidth: stroke.lineWidth)
             }
         }
         .aspectRatio(3, contentMode: .fit)
