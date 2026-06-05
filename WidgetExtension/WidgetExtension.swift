@@ -67,27 +67,23 @@ func widgetStrokes(from shared: WidgetSharedSignatureData) -> [WidgetStroke] {
 // MARK: - Timeline Provider
 struct Provider: AppIntentTimelineProvider {
     func placeholder(in context: Context) -> SimpleEntry {
-        SimpleEntry(date: Date(),
-                    strokes: [],
-                    configuration: ConfigurationAppIntent())
+        SimpleEntry(date: Date(), strokes: [], configuration: ConfigurationAppIntent(), hasAccess: true)
     }
 
     func snapshot(for configuration: ConfigurationAppIntent, in context: Context) async -> SimpleEntry {
         let strokes = await loadStrokes(for: configuration)
-        return SimpleEntry(date: Date(),
-                           strokes: strokes,
-                           configuration: configuration)
+        return SimpleEntry(date: Date(), strokes: strokes, configuration: configuration,
+                           hasAccess: WidgetAccessChecker.hasAccess)
     }
-    
+
     func timeline(for configuration: ConfigurationAppIntent, in context: Context) async -> Timeline<SimpleEntry> {
-        let currentDate = Date()
-        let strokes = await loadStrokes(for: configuration)
-
-        let entry = SimpleEntry(date: currentDate,
-                                strokes: strokes,
-                                configuration: configuration)
-
-        return Timeline(entries: [entry], policy: .atEnd)
+        let access = WidgetAccessChecker.hasAccess
+        let strokes = access ? await loadStrokes(for: configuration) : []
+        let entry = SimpleEntry(date: Date(), strokes: strokes, configuration: configuration,
+                                hasAccess: access)
+        // Refresh every hour so trial expiry is noticed quickly
+        let nextUpdate = Calendar.current.date(byAdding: .hour, value: 1, to: Date()) ?? Date()
+        return Timeline(entries: [entry], policy: .after(nextUpdate))
     }
 
     private func loadStrokes(for configuration: ConfigurationAppIntent) async -> [WidgetStroke] {
@@ -109,11 +105,37 @@ struct Provider: AppIntentTimelineProvider {
     }
 }
 
+// MARK: - Access Checker (widget-side, reads from App Group)
+
+enum WidgetAccessChecker {
+    private static let appGroupID      = "group.br.com.devbrains.SignatureWidgets"
+    private static let firstLaunchKey  = "com.signaturewidget.firstLaunchDate"
+    private static let purchasedKey    = "com.signaturewidget.isPurchased"
+    private static let trialDays       = 7
+
+    static var hasAccess: Bool { isTrialActive || isPurchased }
+
+    private static var defaults: UserDefaults {
+        UserDefaults(suiteName: appGroupID) ?? .standard
+    }
+
+    private static var isPurchased: Bool {
+        defaults.bool(forKey: purchasedKey)
+    }
+
+    private static var isTrialActive: Bool {
+        guard let launch = defaults.object(forKey: firstLaunchKey) as? Date else { return true }
+        let elapsed = Calendar.current.dateComponents([.day], from: launch, to: Date()).day ?? 0
+        return elapsed < trialDays
+    }
+}
+
 // MARK: - Entry
 struct SimpleEntry: TimelineEntry {
     let date: Date
     let strokes: [WidgetStroke]
     let configuration: ConfigurationAppIntent
+    let hasAccess: Bool
 }
 
 // MARK: - Entry View (adapta para Lock Screen e Home)
@@ -122,20 +144,54 @@ struct WidgetExtensionEntryView: View {
     var entry: Provider.Entry
 
     var body: some View {
+        if entry.hasAccess {
+            signatureView
+        } else {
+            lockedView
+        }
+    }
+
+    @ViewBuilder
+    private var signatureView: some View {
         switch family {
         case .accessoryInline:
-            Text("Assinatura")
+            Text("Signature")
+        case .accessoryCircular:
+            SignatureThumbnailWidget(strokes: entry.strokes).padding(2)
+        case .accessoryRectangular:
+            SignatureThumbnailWidget(strokes: entry.strokes).padding(4)
+        default:
+            SignatureThumbnailWidget(strokes: entry.strokes).padding(8)
+        }
+    }
+
+    @ViewBuilder
+    private var lockedView: some View {
+        switch family {
+        case .accessoryInline:
+            Label("Subscribe", systemImage: "lock.fill")
         case .accessoryCircular:
             ZStack {
-                SignatureThumbnailWidget(strokes: entry.strokes)
-                    .padding(2)
+                Circle().fill(Color.gray.opacity(0.15))
+                Image(systemName: "lock.fill")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(.secondary)
             }
-        case .accessoryRectangular:
-            SignatureThumbnailWidget(strokes: entry.strokes)
-                .padding(4)
         default:
-            SignatureThumbnailWidget(strokes: entry.strokes)
-                .padding(8)
+            ZStack {
+                Color(.systemBackground).opacity(0.95)
+                VStack(spacing: 6) {
+                    Image(systemName: "lock.fill")
+                        .font(.system(size: 20, weight: .semibold))
+                        .foregroundStyle(.indigo)
+                    Text("Subscribe to continue")
+                        .font(.system(size: 12, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.primary)
+                    Text("Open the app")
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+                }
+            }
         }
     }
 }
@@ -151,8 +207,8 @@ struct WidgetExtension: Widget {
             WidgetExtensionEntryView(entry: entry)
                 .containerBackground(.fill.tertiary, for: .widget)
         }
-        .configurationDisplayName("Assinatura")
-        .description("Mostra sua assinatura salva.")
+        .configurationDisplayName("Signature")
+        .description("Shows your saved signature.")
         .supportedFamilies([
             .systemSmall,            // Home Screen
             .systemMedium,           // Home Screen (opcional)
@@ -168,5 +224,6 @@ struct WidgetExtension: Widget {
 #Preview(as: .systemSmall) {
     WidgetExtension()
 } timeline: {
-    SimpleEntry(date: .now, strokes: [], configuration: ConfigurationAppIntent())
+    SimpleEntry(date: .now, strokes: [], configuration: ConfigurationAppIntent(), hasAccess: true)
+    SimpleEntry(date: .now, strokes: [], configuration: ConfigurationAppIntent(), hasAccess: false)
 }

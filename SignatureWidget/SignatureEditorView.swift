@@ -45,13 +45,13 @@ struct SignatureEditorView: View {
                     .padding(.bottom, 24)
             }
             .background(Color(.systemGroupedBackground).ignoresSafeArea())
-            .navigationTitle("Nova Assinatura")
+            .navigationTitle("New Signature")
 #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
 #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancelar") {
+                    Button("Cancel") {
                         onFinish(.cancelled)
                         dismiss()
                     }
@@ -83,7 +83,7 @@ struct SignatureEditorView: View {
 
             // Subtle guide text when blank
             if workingStrokes.isEmpty && currentStroke.points.isEmpty {
-                Text("Desenhe aqui")
+                Text("Draw here")
                     .font(.system(size: 15, weight: .medium, design: .rounded))
                     .foregroundStyle(Color.brandIndigo.opacity(0.25))
                     .allowsHitTesting(false)
@@ -175,7 +175,7 @@ struct SignatureEditorView: View {
             onFinish(.saved)
             dismiss()
         } label: {
-            Label("Salvar Assinatura", systemImage: "checkmark")
+            Label("Save Signature", systemImage: "checkmark")
                 .font(.system(size: 17, weight: .semibold))
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity)

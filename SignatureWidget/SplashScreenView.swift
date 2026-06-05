@@ -17,6 +17,7 @@ struct SplashScreenView: View {
     var body: some View {
         if isActive {
             ContentView()
+                .environmentObject(StoreManager.shared)
         } else {
             ZStack {
                 // Full-screen brand gradient
@@ -47,7 +48,7 @@ struct SplashScreenView: View {
                             .foregroundStyle(.white)
                             .opacity(titleOpacity)
 
-                        Text("Sua assinatura, sempre à mão")
+                        Text("Your signature, always at hand")
                             .font(.system(size: 16, weight: .medium, design: .rounded))
                             .foregroundStyle(.white.opacity(0.75))
                             .opacity(taglineOpacity)

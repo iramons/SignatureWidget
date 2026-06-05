@@ -9,9 +9,11 @@ import WidgetKit
 
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
+    @EnvironmentObject private var store: StoreManager
     @Query(sort: \Signature.createdAt, order: .reverse) private var signatures: [Signature]
     @State private var showingEditor     = false
     @State private var selectedSignature: Signature?
+    @State private var showingPaywall    = false
 
     var body: some View {
         NavigationSplitView {
@@ -22,17 +24,51 @@ struct ContentView: View {
                     signatureList
                 }
             }
-            .navigationTitle("Assinaturas")
+            .navigationTitle("Signatures")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(LinearGradient.brand, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
+            .toolbarColorScheme(.dark, for: .navigationBar)
 #if os(macOS)
             .navigationSplitViewColumnWidth(min: 240, ideal: 280)
 #endif
             .toolbar { toolbarContent }
             .sheet(isPresented: $showingEditor) { editorSheet }
+            .sheet(isPresented: $showingPaywall) { PaywallView().environmentObject(store) }
+            .safeAreaInset(edge: .top) { trialBanner }
         } detail: {
             detailPlaceholder
         }
         .onAppear {
             SignatureSharingWriter.rebuildCatalog(from: signatures)
+        }
+    }
+
+    // MARK: - Trial Banner
+
+    @ViewBuilder
+    private var trialBanner: some View {
+        if !store.isPurchased {
+            Button { showingPaywall = true } label: {
+                HStack(spacing: 10) {
+                    Image(systemName: TrialManager.isTrialActive ? "clock" : "lock.fill")
+                        .font(.system(size: 13, weight: .semibold))
+                    if TrialManager.isTrialActive {
+                        Text("**\(TrialManager.trialDaysRemaining) days** left in trial — Subscribe to continue")
+                            .font(.system(size: 13))
+                    } else {
+                        Text("Your trial ended — **Subscribe now** to keep the widget active")
+                            .font(.system(size: 13))
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 11, weight: .semibold))
+                }
+                .foregroundStyle(.white)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
+                .background(LinearGradient.brand)
+            }
         }
     }
 
@@ -72,9 +108,9 @@ struct ContentView: View {
             }
 
             VStack(spacing: 8) {
-                Text("Nenhuma assinatura")
+                Text("No signatures")
                     .font(.system(size: 22, weight: .bold, design: .rounded))
-                Text("Crie sua primeira assinatura\ne adicione ao widget.")
+                Text("Create your first signature\nand add it to the widget.")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -84,7 +120,7 @@ struct ContentView: View {
                 selectedSignature = Signature()
                 showingEditor = true
             } label: {
-                Label("Nova Assinatura", systemImage: "plus")
+                Label("New Signature", systemImage: "plus")
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundStyle(.white)
                     .padding(.horizontal, 32)
@@ -158,7 +194,7 @@ struct ContentView: View {
             AppLogoMarkView()
                 .frame(width: 72, height: 72)
                 .opacity(0.35)
-            Text("Selecione ou crie uma assinatura")
+            Text("Select or create a signature")
                 .font(.system(.subheadline, design: .rounded))
                 .foregroundStyle(.secondary)
         }
@@ -215,7 +251,7 @@ private struct SignatureRowView: View {
                 )
 
             VStack(alignment: .leading, spacing: 4) {
-                Text("Assinatura")
+                Text("Signature")
                     .font(.system(size: 15, weight: .semibold, design: .rounded))
                 Text(signature.createdAt, format: Date.FormatStyle(date: .numeric, time: .shortened))
                     .font(.caption)
@@ -265,7 +301,7 @@ struct SignatureDetailView: View {
 
                 // Edit button
                 Button(action: onEdit) {
-                    Label("Editar Assinatura", systemImage: "pencil")
+                    Label("Edit Signature", systemImage: "pencil")
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
@@ -279,7 +315,7 @@ struct SignatureDetailView: View {
             .padding(.top, 28)
         }
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
-        .navigationTitle("Assinatura")
+        .navigationTitle("Signature")
 #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
 #endif

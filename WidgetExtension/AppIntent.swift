@@ -13,7 +13,7 @@ internal import UniformTypeIdentifiers
 
 // MARK: - AppEntity que representa uma assinatura disponível
 struct SignatureChoice: AppEntity, Identifiable {
-    static var typeDisplayRepresentation = TypeDisplayRepresentation(name: "Assinatura")
+    static var typeDisplayRepresentation = TypeDisplayRepresentation(name: "Signature")
 
     static var defaultQuery = SignatureChoiceQuery()
 
@@ -107,9 +107,9 @@ enum WidgetCatalogLoader {
 // MARK: - Intent de configuração do Widget
 
 struct ConfigurationAppIntent: WidgetConfigurationIntent {
-    static var title: LocalizedStringResource { "Assinatura" }
-    static var description: IntentDescription { "Escolha qual assinatura mostrar." }
+    static var title: LocalizedStringResource { "Signature" }
+    static var description: IntentDescription { "Choose which signature to show." }
 
-    @Parameter(title: "Assinatura")
+    @Parameter(title: "Signature")
     var signature: SignatureChoice?
 }
