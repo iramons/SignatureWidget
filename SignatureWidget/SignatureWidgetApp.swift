@@ -39,6 +39,7 @@ struct SignatureWidgetApp: App {
     }()
 
     init() {
+        loadRocketSimConnect()
         // Record first launch date for the 7-day trial clock
         TrialManager.recordFirstLaunchIfNeeded()
         // Kick off entitlement refresh in the background
@@ -52,4 +53,16 @@ struct SignatureWidgetApp: App {
         }
         .modelContainer(sharedModelContainer)
     }
+}
+
+// MARK: - RocketSim
+
+private func loadRocketSimConnect() {
+    #if DEBUG
+    guard (Bundle(path: "/Applications/RocketSim.app/Contents/Frameworks/RocketSimConnectLinker.nocache.framework")?.load() == true) else {
+        print("Failed to load linker framework")
+        return
+    }
+    print("RocketSim Connect successfully linked")
+    #endif
 }
