@@ -58,8 +58,10 @@ final class StoreManager: ObservableObject {
                 (order.firstIndex(of: $0.id) ?? 99) < (order.firstIndex(of: $1.id) ?? 99)
             }
         } catch {
-            errorMessage = String(localized: "Could not load plans.")
-            print("StoreManager.loadProducts:", error)
+            let ns = error as NSError
+            errorMessage = "Could not load plans. [\(ns.domain) \(ns.code)]"
+            print("StoreManager.loadProducts error:", error)
+            print("StoreManager.loadProducts domain:", ns.domain, "code:", ns.code)
         }
     }
 

@@ -7,7 +7,7 @@ import StoreKit
 import SwiftUI
 
 struct PaywallView: View {
-    @ObservedObject var store = StoreManager.shared
+    @EnvironmentObject var store: StoreManager
     @Environment(\.dismiss) private var dismiss
 
     @State private var selectedProductID: String? = StoreManager.ProductID.yearly
@@ -46,7 +46,7 @@ struct PaywallView: View {
             } message: {
                 Text(errorText)
             }
-            .task { await store.loadProducts() }
+            .task { if store.products.isEmpty { await store.loadProducts() } }
         }
     }
 
@@ -105,7 +105,7 @@ struct PaywallView: View {
                 ProgressView()
                     .padding(.vertical, 32)
             } else if store.products.isEmpty {
-                Text("Could not load plans.\nCheck your connection.")
+                Text(store.errorMessage ?? "Could not load plans.\nCheck your connection.")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -307,4 +307,5 @@ private struct PlanCard: View {
 
 #Preview {
     PaywallView()
+        .environmentObject(StoreManager.shared)
 }
